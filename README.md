@@ -1,8 +1,11 @@
 # shapeless-like-scala3
 
-- Scala 3 https://github.com/typelevel/shapeless-3 (`deriving`, `test`, `typeable`, former `data`)
+- Scala 3 
+  - https://github.com/typelevel/shapeless-3 (`deriving`, `test`, `typeable`, former `data`)
+  - https://mvnrepository.com/search?q=shapeless3
 
-- Scala 2.13 https://github.com/milessabin/shapeless
+- Scala 2.13 
+  - https://github.com/milessabin/shapeless
   - Scala 3 port
     - https://github.com/milessabin/shapeless/issues/1043
     - https://github.com/milessabin/shapeless/pull/1200
