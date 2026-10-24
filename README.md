@@ -15,6 +15,13 @@
   - Blockers
     - https://github.com/scala/scala3/issues/17212
     - https://github.com/scala/scala3/issues/24114
+- Implicit-resoltion utilities
+  - https://stackoverflow.com/questions/57482298/is-there-a-type-class-that-checks-for-existence-of-at-least-one-implicit-of-a-ty (`Exists`)
+  - https://stackoverflow.com/questions/55462253/create-an-ambiguous-low-priority-implicit (`LocalImplicit`)
+  - https://stackoverflow.com/questions/26723337/using-the-prolog-in-scala-to-find-available-type-class-instances (`AllImplicits`)
+  - https://stackoverflow.com/questions/56777174/finding-the-second-matching-implicit (`SecondBest`)
+  - https://stackoverflow.com/questions/75806511/how-to-summon-a-given-member (`SecondBest`)
+  - `MaterilizeImplicitConversion`
 
 ---
 
