@@ -1,1 +1,7 @@
-.idea
+.idea/
+.bsp/
+.bloop/
+.metals/
+target/
+**/target/
+.DS_Store
