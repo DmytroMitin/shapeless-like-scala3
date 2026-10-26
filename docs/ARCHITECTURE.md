@@ -52,6 +52,18 @@ The initial artifact implements a Shapeless-like ad-hoc `Poly1` registry and het
 
 The [design note](POLY1_TUPLE_MAPPER.md) records the coherence experiments, selected registry semantics, and first-slice limitations. Later package families remain hypotheses and require separate gates.
 
+### Implemented ordered Coproduct slice
+
+`shapelesslike.coproduct` implements an invariant ordered sum over a standard type tuple:
+
+- a sealed `Coproduct[Alts]` carrier uses private nested `Here`/`There` nodes;
+- structural `Position[Alts, I, A]` evidence constructs and projects an exact zero-based position without type inequality or subtype search;
+- concrete `projectAt[I]` returns `Option[Tuple.Elem[Alts, I]]`, while `projectAtAs[I, A]` supports abstract callers carrying explicit evidence;
+- `Handlers[Alts, R]` gives exhaustive positional fold, including distinct bodies for repeated element types;
+- the kernel is cast-free and keeps constructors/evidence implementations owner-controlled.
+
+This slice is for anonymous generic alternative tuples whose occurrence identity matters. Declared enums/sealed ADTs with `Mirror` remain the normal domain-model choice. Type-only selection, transforms, labels, Mirror conversion and serialization are deferred. The [ordered Coproduct design note](ORDERED_COPRODUCT.md) defines the exact public contract.
+
 ## Quality bars
 
 Compile-positive and compile-negative tests, runtime laws where appropriate, type equality assertions, basic compilation-cost observations for larger tuples, and explicit version matrix. Prefer understandable failure messages and maintainable designs over a comprehensive compatibility facade.

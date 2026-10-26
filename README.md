@@ -18,9 +18,9 @@ Candidate gaps include:
 
 ## Status
 
-The first implemented vertical slice is an ad-hoc unary `Poly1` registry plus exact mapping of ordinary Scala tuples. It is source-tested on Scala 3.9.0 and targets JVM 17 bytecode. No binary release or compatibility promise has been made yet.
+The implemented experimental slices are an ad-hoc unary `Poly1` registry with exact mapping of ordinary Scala tuples, and a cast-free indexed ordered `Coproduct` that preserves repeated alternative positions. They are source-tested on Scala 3.9.0 and target JVM 17 bytecode. No binary release or compatibility promise has been made yet.
 
-See [scope](docs/PROJECT_SCOPE.md), [architecture](docs/ARCHITECTURE.md), and the [Poly1/tuple Mapper design note](docs/POLY1_TUPLE_MAPPER.md).
+See [scope](docs/PROJECT_SCOPE.md), [architecture](docs/ARCHITECTURE.md), the [Poly1/tuple Mapper design note](docs/POLY1_TUPLE_MAPPER.md), and the [indexed ordered Coproduct design note](docs/ORDERED_COPRODUCT.md).
 
 ## Poly1 tuple mapping
 
@@ -47,6 +47,33 @@ The uniqueness proof is intentionally conservative: related keys such as `Int` a
 
 The lower-level public `Selector` and `Mapper` evidence also accepts manually assembled tuples of `Case` values. That surface uses ordered first-key semantics and refuses to skip an unresolved abstract or related key, so later type substitution cannot change which case body runs. See the design note for the exact boundary and conservative generic/related-key restriction.
 
+## Indexed ordered Coproduct
+
+`Coproduct[Alts]` stores one position of an ordinary type tuple. Position remains observable even when multiple alternatives have the same type:
+
+```scala
+import shapelesslike.coproduct.Coproduct
+import shapelesslike.coproduct.Coproduct.Handlers
+
+type Alts = Int *: String *: Int *: EmptyTuple
+
+val value = Coproduct.at[Alts, 2].inject(7)
+val atFirst: Option[Int] = value.projectAt[0]
+val atLast: Option[Int] = value.projectAt[2]
+
+val handlers: Handlers[Alts, String] =
+  ((i: Int) => s"first:$i") *:
+    ((s: String) => s"text:$s") *:
+    ((i: Int) => s"second:$i") *:
+    EmptyTuple
+
+assert(atFirst.isEmpty)
+assert(atLast.contains(7))
+assert(value.fold[String](handlers) == "second:7")
+```
+
+Construction and projection are exact and index-based; there is no type-only first match or subtype fallback. The carrier is a private nested GADT with a cast-free kernel. Prefer enums/sealed ADTs for stable named domains. See the [full contract and limitations](docs/ORDERED_COPRODUCT.md).
+
 ## References
 
 - [Scala 2 Shapeless](https://github.com/milessabin/shapeless)
@@ -66,6 +93,7 @@ Run the complete suite and compile the checked example with:
 ```text
 sbt test
 sbt "Test / runMain shapelesslike.examples.poly1TupleMapperExample"
+sbt "Test / runMain shapelesslike.examples.orderedCoproductExample"
 ```
 
 The build pins Scala 3.9.0, targets JDK 17, and uses MUnit 1.2.4 for tests. Continue to investigate each new operation's Scala 2 semantics and Scala 3 alternatives before implementation; no binary artifact or broader supported-version range is promised yet.
