@@ -1,7 +1,9 @@
-# Planned implementation modules
+# Build layout
 
-No physical Scala/sbt modules exist yet. Prompt 001 will recommend a minimal initial module split after checking the Scala version/toolchain and actual missing features.
+The repository currently builds one sbt artifact. Capability boundaries are packages, not physical subprojects:
 
-**Tentative order:** Poly + tuple vertical slice; ordered coproduct; NamedTuple record operations; labelled sums; derivation adapters; experimental contextual search.
+- `shapelesslike.poly`
+- `shapelesslike.tuple.typeclasses`
+- `shapelesslike.tuple.syntax`
 
-Avoid placeholder Scala implementations, unused dependencies, or empty sbt projects merely to instantiate this list.
+Future ordered coproduct, NamedTuple, derivation, or contextual-search work is not pre-created as empty modules. A separate build boundary should be added only when a real dependency or publishing boundary requires it.

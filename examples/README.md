@@ -1,7 +1,9 @@
-# Runnable examples (planned)
+# Runnable examples
 
-This directory will contain compile-checked examples once the initial API and build are approved.
+`Poly1TupleMapperExample.scala` is compiled as part of the test configuration and can be run with:
 
-First candidate: an ad-hoc `Poly1` with cases for `Int`, `String`, and `Boolean` mapping `(Int, String, Boolean)` to `(String, Int, Boolean)` while statically rejecting missing cases.
+```text
+sbt "Test / runMain shapelesslike.examples.poly1TupleMapperExample"
+```
 
-Do not present hypothetical syntax as already compilable. A later implementation task should add executable examples and tests.
+It maps `(Int, String, Boolean)` to exactly `(String, Int, Boolean)` using three independently typed cases.

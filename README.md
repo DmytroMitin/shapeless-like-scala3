@@ -18,9 +18,32 @@ Candidate gaps include:
 
 ## Status
 
-**Research/architecture bootstrap.** There is no published API, build, binary artifact, or implementation yet. The first planned vertical slice is ad-hoc `Poly1` plus tuple mapping, subject to a gap-analysis decision.
+The first implemented vertical slice is an ad-hoc unary `Poly1` registry plus exact mapping of ordinary Scala tuples. It is source-tested on Scala 3.9.0 and targets JVM 17 bytecode. No binary release or compatibility promise has been made yet.
 
-See [scope](docs/PROJECT_SCOPE.md), [architectural hypotheses](docs/ARCHITECTURE.md), and [feature candidates](docs/FEATURE_CANDIDATES.md). The planned source and example directories are tracked through [modules/README.md](modules/README.md) and [examples/README.md](examples/README.md).
+See [scope](docs/PROJECT_SCOPE.md), [architecture](docs/ARCHITECTURE.md), and the [Poly1/tuple Mapper design note](docs/POLY1_TUPLE_MAPPER.md).
+
+## Poly1 tuple mapping
+
+`Poly1` stores one case per exact static input type. `mapWith` applies the corresponding case once at each tuple position and infers the exact heterogeneous output tuple.
+
+```scala
+import shapelesslike.poly.{Case, Poly1}
+import shapelesslike.tuple.syntax.*
+
+val transform = Poly1.empty
+  .add(Case.of[Int](_.toString))
+  .add(Case.of[String](_.length))
+  .add(Case.of[Boolean](!_))
+
+val mapped: (String, Int, Boolean) =
+  (1, "abc", true).mapWith(transform)
+
+assert(mapped == ("1", 3, false))
+```
+
+Selection uses the tuple element's static type. An `Int` case does not handle an element typed as `AnyVal`, and an explicitly singleton-typed `1` needs its own `Case.of[1]`. Adding a second case for the same input type is rejected when the `Poly1` is built, even if the two cases have different output types.
+
+The uniqueness proof is intentionally conservative: related keys such as `Int` and `AnyVal` (or `Int` and singleton `1`) cannot coexist in one registry because Scala cannot prove that they remain distinct under substitution. Use separate registries for those exact dispatch domains. Generic registry builders must carry `Absent[...]` evidence explicitly; it is resolved only at a concrete, provably distinct instantiation.
 
 ## References
 
@@ -36,4 +59,11 @@ See [scope](docs/PROJECT_SCOPE.md), [architectural hypotheses](docs/ARCHITECTURE
 
 ## Development
 
-Investigate each operation's Scala 2 semantics and its Scala 3 alternatives before implementation. No compatibility, binary artifacts, or supported Scala version range are promised at this stage. Contributions and design discussions are welcome once a narrow API is specified.
+Run the complete suite and compile the checked example with:
+
+```text
+sbt test
+sbt "Test / runMain shapelesslike.examples.poly1TupleMapperExample"
+```
+
+The build pins Scala 3.9.0, targets JDK 17, and uses MUnit 1.2.4 for tests. Continue to investigate each new operation's Scala 2 semantics and Scala 3 alternatives before implementation; no binary artifact or broader supported-version range is promised yet.

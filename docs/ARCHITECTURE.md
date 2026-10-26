@@ -1,4 +1,4 @@
-# Architecture hypotheses (not yet final)
+# Architecture
 
 ## Principle: one semantics, multiple useful representations
 
@@ -40,16 +40,17 @@ Do not assume the compiler can prove `Typeclass[A]#Out =:= MatchTypeResult[A]` g
 - Scala sum derivation through `Mirror` is distinct from an arbitrary ordered coproduct; conversions and ordering need a contract.
 - Labelled variants require an explicit label semantics.
 
-### Proposed first vertical slice
+### Implemented first vertical slice
 
-Investigate a Shapeless-like ad-hoc `Poly1` abstraction and heterogeneous tuple `Mapper`:
-- independent cases (possibly with different result types),
-- precise compile-time result type and missing-case diagnostics,
-- sensible treatment of repeated element types,
-- demonstrated difference from generic polymorphic functions,
-- no unsafe unchecked implementation disguised as type safety.
+The initial artifact implements a Shapeless-like ad-hoc `Poly1` registry and heterogeneous tuple `Mapper`:
 
-This is a *proposal*, not yet an implemented or accepted API.
+- `shapelesslike.poly` holds typed cases and a duplicate-key-rejecting per-Poly registry;
+- `shapelesslike.tuple.typeclasses` derives exact recursive mapping evidence;
+- `shapelesslike.tuple.syntax` provides `tuple.mapWith(poly)` without shadowing standard `Tuple.map`;
+- ordinary tuples remain the only input/output representation;
+- the mapper kernel uses no unchecked cast.
+
+The [design note](POLY1_TUPLE_MAPPER.md) records the coherence experiments, selected registry semantics, and first-slice limitations. Later package families remain hypotheses and require separate gates.
 
 ## Quality bars
 
