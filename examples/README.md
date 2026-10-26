@@ -13,3 +13,10 @@ It maps `(Int, String, Boolean)` to exactly `(String, Int, Boolean)` using three
 ```text
 sbt "Test / runMain shapelesslike.examples.orderedCoproductExample"
 ```
+
+`NamedTupleUpdateExample.scala` parses one field of a standard named tuple from
+`String` to `Int` while preserving its literal labels and other values:
+
+```text
+sbt "Test / runMain shapelesslike.examples.namedTupleUpdateExample"
+```

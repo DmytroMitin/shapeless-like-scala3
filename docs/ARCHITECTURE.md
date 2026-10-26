@@ -64,6 +64,26 @@ The [design note](POLY1_TUPLE_MAPPER.md) records the coherence experiments, sele
 
 This slice is for anonymous generic alternative tuples whose occurrence identity matters. Declared enums/sealed ADTs with `Mirror` remain the normal domain-model choice. Type-only selection, transforms, labels, Mirror conversion and serialization are deferred. The [ordered Coproduct design note](ORDERED_COPRODUCT.md) defines the exact public contract.
 
+### Implemented NamedTuple update slice
+
+`shapelesslike.record` adds one operation over the standard Scala 3 named-tuple
+representation:
+
+- `RecordSchema[N,V]` positively proves lockstep arity, concrete literal string
+  names, and global name uniqueness;
+- `UpdateByName[N,V,K,B,OutV]` walks names and values together and computes the
+  exact changed value tuple, using positive type-level inequality for tail
+  search;
+- `record.updatedByName(key, replacement)` preserves the name tuple, order, and
+  untouched values while returning standard `NamedTuple[N,OutV]`;
+- evidence implementations are owner-controlled, and the tuple reconstruction
+  kernel is cast-free with no runtime name lookup.
+
+This is replacement of a present field, not upsert. Dynamic keys, malformed
+low-level schemas, other record transforms, macros, `Mirror` conversion, and a
+parallel record representation are excluded. The [NamedTuple update note](NAMEDTUPLE_UPDATE.md)
+defines the exact domain and limitations.
+
 ## Quality bars
 
 Compile-positive and compile-negative tests, runtime laws where appropriate, type equality assertions, basic compilation-cost observations for larger tuples, and explicit version matrix. Prefer understandable failure messages and maintainable designs over a comprehensive compatibility facade.
