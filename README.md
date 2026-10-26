@@ -45,6 +45,8 @@ Selection uses the tuple element's static type. An `Int` case does not handle an
 
 The uniqueness proof is intentionally conservative: related keys such as `Int` and `AnyVal` (or `Int` and singleton `1`) cannot coexist in one registry because Scala cannot prove that they remain distinct under substitution. Use separate registries for those exact dispatch domains. Generic registry builders must carry `Absent[...]` evidence explicitly; it is resolved only at a concrete, provably distinct instantiation.
 
+The lower-level public `Selector` and `Mapper` evidence also accepts manually assembled tuples of `Case` values. That surface uses ordered first-key semantics and refuses to skip an unresolved abstract or related key, so later type substitution cannot change which case body runs. See the design note for the exact boundary and conservative generic/related-key restriction.
+
 ## References
 
 - [Scala 2 Shapeless](https://github.com/milessabin/shapeless)

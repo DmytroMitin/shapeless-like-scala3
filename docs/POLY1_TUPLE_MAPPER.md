@@ -17,7 +17,7 @@ The implementation is in `shapelesslike.poly`, `shapelesslike.tuple.typeclasses`
 
 The selected model is a per-`Poly1` typed registry, not an open set of global case givens. `Poly1.add` requires a match-type proof that the input key is absent, so each constructible registry has at most one case for an exact static input type. Failed implicit search (`NotGiven[A =:= B]`) is deliberately not used as inequality: it would let a generic builder accept abstract `A` and `B`, then create duplicates when both were instantiated as `Int`. Mapper derivation follows the proven-unique registry structure; an externally expected output tuple cannot choose another implementation.
 
-The public type-level result is therefore uniquely determined by the registry type and the static input tuple type for every constructible `Poly1`. `Case` and `Poly1` constructors are restricted to their class/companion owners, so downstream code cannot forge a registry by declaring the library package name. Two equal-shaped `Poly1` values may contain different bodies, but mapping uses the cases stored in the value that was supplied, so bodies cannot leak between identities. Selector and mapper implementation classes are final, preventing indirect subclasses from replacing stored bodies.
+The public type-level result is therefore uniquely determined by the registry type and the static input tuple type for every constructible `Poly1`. `Case` and `Poly1` constructors are restricted to their class/companion owners, so downstream code cannot forge a registry by declaring the library package name. Two equal-shaped `Poly1` values may contain different bodies, but mapping uses the cases stored in the value that was supplied, so bodies cannot leak between identities. `Absent`, `Selector`, and `Mapper` are sealed, and their implementation classes are final, preventing external evidence implementations or indirect subclasses from replacing stored bodies.
 
 Scala 3.9.0 compiler experiments in `CoherenceModelsSuite` also retain the rejected alternatives as executable evidence:
 
@@ -25,11 +25,19 @@ Scala 3.9.0 compiler experiments in `CoherenceModelsSuite` also retain the rejec
 - with a naïve `Case[P, A] { type Out }` and associated `Mapper.Out`, different-output conflicts are ambiguous in inferred and expected contexts, but same-output sequential imports can still select the later body; moreover the recursive result remains path-dependent and does not satisfy the required exact assignment through an abstract tuple;
 - the typed registry rejects duplicate input keys before mapping and preserves exact inference for concrete and abstract tuple inputs.
 
+## Public evidence boundary
+
+`Selector` and `Mapper` are public evidence types, and `Case.of` values can be assembled manually into a raw tuple without a `Poly1`. This low-level use is supported with a narrow ordered rule: the first case with the exact static input key wins, provided every skipped prefix key has substitution-stable `Absent` evidence. If a raw tuple contains duplicate keys, a caller's expected output type cannot skip the first key to select a later body.
+
+Tail selection uses the same substitution-stable `Absent` proof as `Poly1` construction. It will skip a concrete, provably disjoint key, but it will not infer that unresolved abstract parameters or related keys such as `Int`/`AnyVal` and `Int`/singleton `1` differ. Consequently, evidence derived while keys are abstract cannot change its selected body after those keys are both instantiated as the same type. A generic low-level caller that really needs tail selection must carry the corresponding `Absent[...]` evidence, which is checked at the concrete call site.
+
+This rule does not make raw duplicate tuples constructible as a `Poly1`; `Poly1.add` continues to reject them. Supplying `null`, unchecked casts, or other unsafe fabricated values remains outside the type-safe API contract.
+
 ## Static dispatch and limitations
 
-Case lookup is invariant and exact. `Int`, `AnyVal`, and singleton type `1` are different keys. Ordinary tuple construction usually widens literal elements—for example, `1 *: EmptyTuple` has an `Int` head unless an expected tuple type preserves `1`. There is no subtype fallback, runtime class dispatch, source-order tie-break, or implicit-priority hierarchy.
+Case lookup is invariant and exact. `Int`, `AnyVal`, and singleton type `1` are different keys. Ordinary tuple construction usually widens literal elements—for example, `1 *: EmptyTuple` has an `Int` head unless an expected tuple type preserves `1`. There is no subtype fallback, runtime class dispatch, or implicit-priority hierarchy. Constructible `Poly1` registries have no duplicate-key tie to break; manually assembled raw case tuples use the documented first-key rule.
 
-Registry uniqueness is conservative. The absence match type intentionally remains unresolved for abstract key pairs and for related keys such as `Int`/`AnyVal` and `Int`/`1`; those keys cannot coexist in one registry. A generic builder may accept an explicit `Absent[...]` context parameter, which is resolved at a concrete call only when the key set is provably distinct. This restriction prevents equality that appears only after type substitution from changing the mapper result.
+Registry uniqueness and raw tail traversal are conservative. The absence match type intentionally remains unresolved for abstract key pairs and for related keys such as `Int`/`AnyVal` and `Int`/`1`; those keys cannot coexist in one `Poly1`, and a raw selector cannot skip one related key to reach the other. A generic builder or low-level evidence helper may accept an explicit `Absent[...]` context parameter, which is resolved at a concrete call only when the key set is provably distinct. This restriction prevents equality that appears only after type substitution from changing the mapper result.
 
 This slice does not cover Poly2, composition, fallback cases, folds, filters, `NamedTuple` name preservation, products through `Mirror`, ordered coproducts, or a macro DSL. The build is pinned to Scala 3.9.0 and targets JVM 17; other Scala versions are not claimed.
 
@@ -37,8 +45,10 @@ This slice does not cover Poly2, composition, fallback cases, folds, filters, `N
 
 - `Poly1MapperSuite` checks exact types, values, duplicates, empty/singleton tuples, abstract tuple methods, evidence-delayed generic registry construction, static input keys, body execution counts, identity isolation, and arities 10, 22, and 32.
 - `CompileErrorsSuite` checks missing cases, duplicate keys with same and different outputs, both expected-output choices, wrong expected output, wrong Poly value, widened inputs, singleton inputs, related-key rejection, abstract-key construction, final evidence implementations, and a wrong external generic result.
+- `EvidenceHardeningSuite` checks concrete first-key selection for raw duplicates, rejection of substitution-unstable abstract `Selector` and `Mapper` derivation, expected-output non-steering, disjoint raw tail selection, and unchanged normal `Poly1` mapping.
 - `CoherenceModelsSuite` records inferred/expected and same-scope/imported evidence conflicts, selected runtime bodies, generic mapping shapes, identity separation, and the model comparison that selected the registry.
 - `src/test/resources/negative/ConstructorForgery.scala` is a separately compiled same-package negative source proving downstream code cannot bypass the `Case` or `Poly1` builders.
+- `src/test/resources/negative/AbsentForgery.scala` and `TupleEvidenceForgery.scala` are separately compiled same-package negative sources proving downstream code cannot implement the sealed evidence traits or subclass their final implementations.
 - `examples/Poly1TupleMapperExample.scala` is compiled with the test configuration and is runnable with the command in the root README.
 
 Primary references: [Scala 3.9 `Tuple.scala`](https://github.com/scala/scala3/blob/3.9.0/library/src/scala/Tuple.scala), [Typelevel Shapeless 3](https://github.com/typelevel/shapeless-3), and [Scala 2 Shapeless `Poly`](https://github.com/milessabin/shapeless/blob/main/core/shared/src/main/scala/shapeless/poly.scala).

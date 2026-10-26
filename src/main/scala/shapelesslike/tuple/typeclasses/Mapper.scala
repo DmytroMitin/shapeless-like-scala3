@@ -1,10 +1,15 @@
 package shapelesslike.tuple.typeclasses
 
 import scala.annotation.implicitNotFound
-import scala.util.NotGiven
-import shapelesslike.poly.Case
+import shapelesslike.poly.{Absent, Case}
 
-@implicitNotFound("No case maps the exact static input type ${A} in this Poly1 registry")
+/**
+ * Executable evidence for the first case whose exact static input type is `A`.
+ *
+ * Tail selection requires substitution-stable evidence that the skipped key is
+ * absent, so unresolved abstract keys cannot later collapse into duplicates.
+ */
+@implicitNotFound("No case maps the exact static input type ${A} in this case registry")
 sealed trait Selector[Cases <: Tuple, A, O]:
   def apply(cases: Cases, value: A): O
 
@@ -14,7 +19,7 @@ object Selector:
       cases.head.run(value)
 
   final given tail[H, HO, T <: Tuple, A, O](using
-      notSame: NotGiven[A =:= H],
+      absent: Absent[Case[H, HO] *: EmptyTuple, A],
       tailSelector: Selector[T, A, O]
   ): Selector[Case[H, HO] *: T, A, O] with
     def apply(cases: Case[H, HO] *: T, value: A): O =
@@ -22,7 +27,7 @@ object Selector:
 
 /** Executable evidence that maps `In` to the exact tuple type `Out`. */
 @implicitNotFound(
-  "Cannot map tuple ${In} with this Poly1 registry to ${Out}; a case is missing or the expected output is wrong"
+  "Cannot map tuple ${In} with this case registry to ${Out}; a case is missing or the expected output is wrong"
 )
 sealed trait Mapper[Cases <: Tuple, In <: Tuple, Out <: Tuple]:
   def apply(cases: Cases, input: In): Out
