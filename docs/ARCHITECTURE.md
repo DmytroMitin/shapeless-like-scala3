@@ -84,6 +84,17 @@ low-level schemas, other record transforms, macros, `Mirror` conversion, and a
 parallel record representation are excluded. The [NamedTuple update note](NAMEDTUPLE_UPDATE.md)
 defines the exact domain and limitations.
 
+### Exact static tuple partition
+
+`PartitionExact[In,Q,Yes,No]` is invariant structural executable evidence for
+all-occurrence, stable partition into standard tuples. Both hit and miss require
+positive proofs from a package-restricted partial invariant-key comparator.
+Private final implementations close witness construction. `partitionExact[Q](input)`
+in tuple syntax infers both outputs through a query builder. Related/abstract
+comparisons can be stuck and cause refusal; no failed-search or runtime fallback
+exists. There is no generic Filter equality claim or additional match-type API.
+See the [contract](TUPLE_PARTITION_EXACT.md).
+
 ## Quality bars
 
 Compile-positive and compile-negative tests, runtime laws where appropriate, type equality assertions, basic compilation-cost observations for larger tuples, and explicit version matrix. Prefer understandable failure messages and maintainable designs over a comprehensive compatibility facade.

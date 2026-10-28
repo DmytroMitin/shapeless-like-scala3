@@ -10,3 +10,11 @@ object syntax:
         mapper: Mapper[Cases, In, Out]
     ): Out =
       mapper(poly.cases, input)
+
+  /** Starts an exact-static partition query; both result tuple types are inferred. */
+  def partitionExact[Q]: PartitionQuery[Q] = new PartitionQuery[Q]
+
+  final class PartitionQuery[Q] private[syntax] ():
+    def apply[In <: Tuple, Yes <: Tuple, No <: Tuple](input: In)(using
+        partition: shapelesslike.tuple.typeclasses.PartitionExact[In, Q, Yes, No]
+    ): (Yes, No) = partition(input)

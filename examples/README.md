@@ -20,3 +20,10 @@ sbt "Test / runMain shapelesslike.examples.orderedCoproductExample"
 ```text
 sbt "Test / runMain shapelesslike.examples.namedTupleUpdateExample"
 ```
+
+`TuplePartitionExactExample.scala` partitions a typed pipeline into both Warning
+occurrences and the exact remaining Request/Cache tuple:
+
+```text
+sbt "Test / runMain shapelesslike.examples.tuplePartitionExactExample"
+```

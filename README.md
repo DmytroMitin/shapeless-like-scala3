@@ -18,7 +18,7 @@ Candidate gaps include:
 
 ## Status
 
-The implemented experimental slices are an ad-hoc unary `Poly1` registry with exact mapping of ordinary Scala tuples, a cast-free indexed ordered `Coproduct` that preserves repeated alternative positions, and a safe type-changing `NamedTuple.updatedByName` operation for distinct literal labels. They are source-tested on Scala 3.9.0 and target JVM 17 bytecode. No binary release or compatibility promise has been made yet.
+The implemented experimental slices are an ad-hoc unary `Poly1` registry with exact mapping of ordinary Scala tuples, a cast-free indexed ordered `Coproduct` that preserves repeated alternative positions, a safe type-changing `NamedTuple.updatedByName` operation for distinct literal labels, and conservative exact-static tuple partition. They are source-tested on Scala 3.9.0 and target JVM 17 bytecode. No binary release or compatibility promise has been made yet.
 
 See [scope](docs/PROJECT_SCOPE.md), [architecture](docs/ARCHITECTURE.md), the [Poly1/tuple Mapper design note](docs/POLY1_TUPLE_MAPPER.md), the [indexed ordered Coproduct design note](docs/ORDERED_COPRODUCT.md), and the [NamedTuple update contract](docs/NAMEDTUPLE_UPDATE.md).
 
@@ -90,6 +90,20 @@ val parsed: (name: String, age: Int, active: Boolean) =
 
 Positive `RecordSchema` evidence rejects malformed low-level schemas with duplicate or nonliteral names or mismatched arity. Keys are compile-time literals, not runtime strings; missing keys fail to compile. The implementation preserves names/order/untouched values and uses no casts or custom record representation. See the [full contract and limitations](docs/NAMEDTUPLE_UPDATE.md).
 
+## Exact static tuple partition
+
+`partitionExact[Q](input)` gathers every exact static occurrence into one tuple
+and preserves all remaining elements in another, keeping order in each:
+
+```scala
+import shapelesslike.tuple.syntax.*
+val input: (Int, String, Int) = (11, "x", 22)
+val result: ((Int, Int), Tuple1[String]) = partitionExact[Int](input)
+```
+
+Related or unresolved types conservatively fail derivation; this is neither
+subtype selection nor runtime classification. See the [contract](docs/TUPLE_PARTITION_EXACT.md).
+
 ## References
 
 - [Scala 2 Shapeless](https://github.com/milessabin/shapeless)
@@ -111,6 +125,7 @@ sbt test
 sbt "Test / runMain shapelesslike.examples.poly1TupleMapperExample"
 sbt "Test / runMain shapelesslike.examples.orderedCoproductExample"
 sbt "Test / runMain shapelesslike.examples.namedTupleUpdateExample"
+sbt "Test / runMain shapelesslike.examples.tuplePartitionExactExample"
 ```
 
 The build pins Scala 3.9.0, targets JDK 17, and uses MUnit 1.2.4 for tests. Continue to investigate each new operation's Scala 2 semantics and Scala 3 alternatives before implementation; no binary artifact or broader supported-version range is promised yet.
