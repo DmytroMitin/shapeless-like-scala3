@@ -62,7 +62,23 @@ The [design note](POLY1_TUPLE_MAPPER.md) records the coherence experiments, sele
 - `Handlers[Alts, R]` gives exhaustive positional fold, including distinct bodies for repeated element types;
 - the kernel is cast-free and keeps constructors/evidence implementations owner-controlled.
 
-This slice is for anonymous generic alternative tuples whose occurrence identity matters. Declared enums/sealed ADTs with `Mirror` remain the normal domain-model choice. Type-only selection, transforms, labels, Mirror conversion and serialization are deferred. The [ordered Coproduct design note](ORDERED_COPRODUCT.md) defines the exact public contract.
+This slice is for anonymous generic alternative tuples whose occurrence identity matters. Declared enums/sealed ADTs with `Mirror` remain the normal domain-model choice. Type-only selection, transforms, Mirror conversion and serialization are deferred. The [ordered Coproduct design note](ORDERED_COPRODUCT.md) defines the exact public contract.
+
+### Implemented labelled sum view
+
+`LabelledSum[Names, Values]` is an opaque view over the original `Coproduct[Values]`:
+
+- unchanged `RecordSchema` validates equal arity and globally unique literal String labels before builder creation or raw attachment;
+- sealed invariant `LabelPosition[N,V,K,I,A]` maps a label to its exact position/payload with positive head/tail evidence;
+- existing `Position` performs injection and `projectAtAs` projection; ordinal and exhaustive positional fold delegate to the raw carrier;
+- explicit unwrap/validated attach preserve the same raw reference with no extra active-carrier wrapper;
+- equality/hash/display inherit ordinal/payload behavior and may coincide across different static label schemas.
+
+Names provide stable addresses under type-level prefix composition. They are not
+runtime provenance. An enum/ADT remains preferable for a fixed domain. The
+[labelled sum contract](LABELLED_SUM.md) records literal/generic constraints and
+the explicit relabelling/equality boundary. Broader labelled transforms and
+runtime metadata remain deferred.
 
 ### Implemented NamedTuple update slice
 

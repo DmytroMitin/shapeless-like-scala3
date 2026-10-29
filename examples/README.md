@@ -27,3 +27,12 @@ occurrences and the exact remaining Request/Cache tuple:
 ```text
 sbt "Test / runMain shapelesslike.examples.tuplePartitionExactExample"
 ```
+
+`LabelledSumExample.scala` addresses repeated `Int` alternatives by unique literal
+labels and shows the same `"hex"` key after prefixing shifts its ordinal:
+
+```text
+sbt "Test / runMain shapelesslike.examples.labelledSumExample"
+```
+
+It also delegates positional fold and verifies reference-preserving raw attachment.

@@ -18,7 +18,7 @@ Candidate gaps include:
 
 ## Status
 
-The implemented experimental slices are an ad-hoc unary `Poly1` registry with exact mapping of ordinary Scala tuples, a cast-free indexed ordered `Coproduct` that preserves repeated alternative positions, a safe type-changing `NamedTuple.updatedByName` operation for distinct literal labels, and conservative exact-static tuple partition. They are source-tested on Scala 3.9.0 and target JVM 17 bytecode. No binary release or compatibility promise has been made yet.
+The implemented experimental slices are an ad-hoc unary `Poly1` registry with exact mapping of ordinary Scala tuples, a cast-free indexed ordered `Coproduct` that preserves repeated alternative positions, a safe type-changing `NamedTuple.updatedByName` operation for distinct literal labels, conservative exact-static tuple partition, and a validated opaque labelled view over `Coproduct`. They are source-tested on Scala 3.9.0 and target JVM 17 bytecode. No binary release or compatibility promise has been made yet.
 
 See [scope](docs/PROJECT_SCOPE.md), [architecture](docs/ARCHITECTURE.md), the [Poly1/tuple Mapper design note](docs/POLY1_TUPLE_MAPPER.md), the [indexed ordered Coproduct design note](docs/ORDERED_COPRODUCT.md), and the [NamedTuple update contract](docs/NAMEDTUPLE_UPDATE.md).
 
@@ -74,6 +74,27 @@ assert(value.fold[String](handlers) == "second:7")
 
 Construction and projection are exact and index-based; there is no type-only first match or subtype fallback. The carrier is a private nested GADT with a cast-free kernel. Prefer enums/sealed ADTs for stable named domains. See the [full contract and limitations](docs/ORDERED_COPRODUCT.md).
 
+## Labelled sum view
+
+`LabelledSum` adds literal-name injection/projection over the same positional carrier:
+
+```scala
+import shapelesslike.coproduct.LabelledSum
+type Names = ("decimal", "text", "hex")
+type Values = (Int, String, Int)
+val hex = LabelledSum.of[Names, Values].inject("hex", 42)
+val selected: Option[Int] = hex.project("hex")     // Some(42)
+val missing: Option[Int] = hex.project("decimal")  // None
+assert(hex.ordinal == 2)
+```
+
+Whole-schema validation requires unique literal String names and equal arity.
+Named addresses survive schema prefix composition even when ordinals shift.
+`fold[R]` uses existing positional handlers; explicit raw attach/unwrap retain the
+same carrier object. Equality/hash/display inherit raw ordinal/payload semantics,
+so different label schemas can compare equal. Prefer enums for fixed declared
+domains. See the [contract and generic evidence](docs/LABELLED_SUM.md).
+
 ## NamedTuple update by name
 
 `updatedByName` replaces one existing literal-named field of a standard Scala 3 named tuple and infers its exact new value type:
@@ -126,6 +147,7 @@ sbt "Test / runMain shapelesslike.examples.poly1TupleMapperExample"
 sbt "Test / runMain shapelesslike.examples.orderedCoproductExample"
 sbt "Test / runMain shapelesslike.examples.namedTupleUpdateExample"
 sbt "Test / runMain shapelesslike.examples.tuplePartitionExactExample"
+sbt "Test / runMain shapelesslike.examples.labelledSumExample"
 ```
 
 The build pins Scala 3.9.0, targets JDK 17, and uses MUnit 1.2.4 for tests. Continue to investigate each new operation's Scala 2 semantics and Scala 3 alternatives before implementation; no binary artifact or broader supported-version range is promised yet.
